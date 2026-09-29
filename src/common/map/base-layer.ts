@@ -103,8 +103,24 @@ const useDemoUpstream = (style: StyleSpecification): StyleSpecification => {
 // MapLibre rejects a relative sprite URL
 const absoluteSprite = (url: string) => new URL(url, location.href).href;
 
+// Shared only while in flight, or a style that failed once would never be
+// fetched again. Text rather than a parsed style: MapLibre mutates what it
+// is handed.
+const pendingStyles = new Map<string, Promise<string>>();
+
+const fetchStyle = (url: string): Promise<string> => {
+  let pending = pendingStyles.get(url);
+  if (!pending) {
+    pending = fetch(url)
+      .then((response) => response.text())
+      .finally(() => pendingStyles.delete(url));
+    pendingStyles.set(url, pending);
+  }
+  return pending;
+};
+
 export const loadStyle = async (url: string): Promise<StyleSpecification> => {
-  const style: StyleSpecification = await (await fetch(url)).json();
+  const style: StyleSpecification = JSON.parse(await fetchStyle(url));
 
   if (typeof style.sprite === "string") {
     style.sprite = absoluteSprite(style.sprite);
@@ -310,11 +326,27 @@ const createRasterLayer = (
     } as TokenTileLayerOptions)
     .addTo(map);
 
-  // Substituted per request, so a refreshed token needs no new layer.
+  // The only sign this path gets that its token is stale. Throttled, or a
+  // tile missing for another reason asks on every pan.
+  let refused = false;
+  let lastRecovery = 0;
+  layer.on("tileerror", () => {
+    refused = true;
+    if (Date.now() - lastRecovery < RECOVERY_THROTTLE) {
+      return;
+    }
+    lastRecovery = Date.now();
+    refreshMapTilesToken();
+  });
+
+  // Substituted per request, so later tiles pick up a new token by
+  // themselves. Only the ones already cached as failures need a redraw.
   const unsubscribe = subscribeMapTilesToken((newToken) => {
     (layer.options as TokenTileLayerOptions).token = newToken;
-    // Tiles that 403'd are cached as failures; only a redraw asks again.
-    layer.redraw();
+    if (refused) {
+      refused = false;
+      layer.redraw();
+    }
   });
   map.on("unload", unsubscribe);
 
