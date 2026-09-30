@@ -1,0 +1,64 @@
+name: GHAV frontend 22826 before
+
+on:
+  push:
+    branches:
+      - codex/ghav-frontend22826-before
+
+permissions:
+  contents: read
+
+env:
+  NODE_OPTIONS: --max_old_space_size=6144
+
+jobs:
+  lint:
+    name: Full lint and format check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout pinned Before source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 39b00f1063b4517e7a9ee50665837e883858c89a
+          persist-credentials: false
+      - name: Setup exact Node and Yarn package cache
+        id: setup-node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20.20.2
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check duplicate dependencies
+        run: yarn dedupe --check
+      - name: Build resources
+        run: ./node_modules/.bin/gulp gen-icons-json build-translations build-locale-data gather-gallery-pages
+      - name: Restore lint cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            node_modules/.cache/prettier
+            node_modules/.cache/eslint
+            node_modules/.cache/typescript
+          key: lint-39b00f1063b4517e7a9ee50665837e883858c89a
+          restore-keys: lint-
+      - name: Run eslint
+        run: yarn run lint:eslint --quiet
+      - name: Run tsc
+        run: yarn run lint:types
+      - name: Run lit-analyzer
+        run: yarn run lint:lit --quiet
+      - name: Run prettier
+        run: yarn run lint:prettier
+      - name: Record task context
+        if: always()
+        run: |
+          echo 'GHAV_ARM=before'
+          echo 'GHAV_NODE_MODULES_CACHE_HIT=none'
+          echo "GHAV_SOURCE_SHA=$(git rev-parse HEAD)"
+          echo "GHAV_SOURCE_TREE=$(git rev-parse HEAD^{tree})"
+          node --version
+          yarn --version
+          test "$(git rev-parse HEAD)" = '39b00f1063b4517e7a9ee50665837e883858c89a'
+          test "$(git rev-parse HEAD^{tree})" = '3c8c7ec5fae858b1b2f90ceb7746a304059b996d'
