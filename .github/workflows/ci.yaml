@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dev
-      - master
+      - 'codex/ghav-frontend-53623-*'
   pull_request:
     branches:
       - dev
@@ -26,6 +25,11 @@ jobs:
     name: Prepare dependencies
     runs-on: ubuntu-latest
     steps:
+      - name: Benchmark context
+        run: |
+          echo "ImageOS=$ImageOS"
+          echo "ImageVersion=$ImageVersion"
+          node --version || true
       - name: Check out files from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -38,6 +42,11 @@ jobs:
     needs: prepare-dependencies
     runs-on: ubuntu-latest
     steps:
+      - name: Benchmark context
+        run: |
+          echo "ImageOS=$ImageOS"
+          echo "ImageVersion=$ImageVersion"
+          node --version || true
       - name: Check out files from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -81,6 +90,11 @@ jobs:
     needs: prepare-dependencies
     runs-on: ubuntu-latest
     steps:
+      - name: Benchmark context
+        run: |
+          echo "ImageOS=$ImageOS"
+          echo "ImageVersion=$ImageVersion"
+          node --version || true
       - name: Check out files from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -103,6 +117,11 @@ jobs:
       - test
     runs-on: ubuntu-latest
     steps:
+      - name: Benchmark context
+        run: |
+          echo "ImageOS=$ImageOS"
+          echo "ImageVersion=$ImageVersion"
+          node --version || true
       - name: Check out files from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
