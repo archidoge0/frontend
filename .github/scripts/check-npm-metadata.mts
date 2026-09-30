@@ -61,7 +61,8 @@ const SECTIONS: Section[] = [
   "peerDependencies",
 ];
 
-const EXACT_VERSION = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
+const EXACT_VERSION =
+  /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
 const NPM_ALIAS = /^npm:((?:@[^/]+\/)?[^@]+)@(.+)$/;
 
@@ -238,14 +239,16 @@ export default async function checkNpmMetadata({
     readPackageJson(github, context, pr.head.sha),
   ]);
 
-  // Compare the packages npm installs, so pointing an npm: alias at another
-  // package counts as new, but moving a package between sections does not
-  const existing = new Set(
-    listDependencies(base).map(({ registryName }) => registryName)
-  );
+  // Compare the declared name together with the package npm installs, so a
+  // new or retargeted npm: alias counts as new, but moving a package between
+  // sections does not
+  const key = ({ name, registryName }: Dependency) =>
+    JSON.stringify([name, registryName]);
+
+  const existing = new Set(listDependencies(base).map(key));
 
   const added = listDependencies(head).filter(
-    ({ registryName }) => !existing.has(registryName)
+    (dependency) => !existing.has(key(dependency))
   );
 
   if (added.length === 0) {

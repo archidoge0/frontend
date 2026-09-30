@@ -8,6 +8,8 @@ on:
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
+      - .github/workflows/dependency-review.yaml
+      - .github/scripts/check-npm-metadata.mts
   schedule:
     - cron: "0 6 1 * *" # Monthly report on all direct dependencies
   workflow_dispatch:
