@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'codex/ghav-frontend-53623-*'
+      - "codex/ghav-frontend-53623-*"
   pull_request:
     branches:
       - dev
