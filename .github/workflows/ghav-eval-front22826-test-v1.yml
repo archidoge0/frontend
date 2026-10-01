@@ -1,0 +1,52 @@
+name: GHAV frontend 22826 complete test job
+on:
+  push:
+    branches: ['codex/ghav-front22826-test-v1-*']
+permissions:
+  contents: read
+env:
+  NODE_OPTIONS: --max_old_space_size=6144 --no-experimental-require-module
+  YARN_NPM_REGISTRY_SERVER: https://registry.npmmirror.com
+jobs:
+  test:
+    name: Complete frontend test job
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout fixed historical source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 39b00f1063b4517e7a9ee50665837e883858c89a
+          persist-credentials: false
+      - name: Setup exact Node and Yarn package cache
+        id: setup-node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 20.20.2
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Verify locked historical dependency and context
+        shell: bash
+        run: |
+          test "$(yarn config get npmRegistryServer)" = 'https://registry.npmmirror.com'
+          test "$(node -p 'process.features.require_module')" = false
+          test "$(node -p "JSON.parse(require('fs').readFileSync('node_modules/tsparticles-preset-links/package.json', 'utf8')).version")" = '2.12.0'
+          echo "GHAV_SOURCE_SHA=$(git rev-parse HEAD)"
+          echo "GHAV_SOURCE_TREE=$(git rev-parse HEAD^{tree})"
+          echo "GHAV_YARN_LOCK_SHA=$(sha256sum yarn.lock | cut -d ' ' -f1)"
+          echo "GHAV_YARN_RC_SHA=$(sha256sum .yarnrc.yml | cut -d ' ' -f1)"
+          echo "GHAV_NODE_VERSION=$(node --version)"
+          echo "GHAV_YARN_VERSION=$(yarn --version)"
+          echo "GHAV_HIST_PACKAGE_TREE_SHA=$(find node_modules/tsparticles-preset-links -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d ' ' -f1)"
+          echo "GHAV_NODE_MODULES_CACHE_HIT=not-configured"
+      - name: Build all historical test resources
+        run: ./node_modules/.bin/gulp gen-icons-json build-translations build-locale-data
+      - name: Run complete historical Vitest suite
+        run: yarn run test
+      - name: Record complete test output witness
+        run: |
+          echo "GHAV_SOURCE_SHA_AFTER=$(git rev-parse HEAD)"
+          echo "GHAV_YARN_LOCK_SHA_AFTER=$(sha256sum yarn.lock | cut -d ' ' -f1)"
+          echo "GHAV_NODE_MODULES_LOCK_SHA=$(sha256sum node_modules/.yarn-state.yml | cut -d ' ' -f1)"
+          echo "GHAV_TRACKED_DIFF_LINES=$(git diff --numstat | wc -l | tr -d ' ')"
