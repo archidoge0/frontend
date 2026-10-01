@@ -1,0 +1,53 @@
+name: GHAV frontend #17384 pinned-source lint core
+
+on:
+  push:
+    branches: ["codex/ghav-fe17384-pinned-*"]
+
+env:
+  NODE_OPTIONS: --max_old_space_size=6144
+  GITHUB_TOKEN: ""
+  YARN_NPM_REGISTRY_SERVER: https://registry.npmmirror.com
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint and check format
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out files from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 9bef6f288ba5cc7f5bfc38ee9c6bf8d2a655228a
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: ".nvmrc"
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check for duplicate dependencies
+        run: yarn dedupe --check
+      - name: Build resources
+        run: ./node_modules/.bin/gulp gen-icons-json build-translations build-locale-data gather-gallery-pages
+      - name: Run eslint
+        run: yarn run lint:eslint --quiet
+      - name: Run tsc
+        run: yarn run lint:types
+      - name: Run prettier
+        run: yarn run lint:prettier
+      - name: Verify common pinned task source
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '9bef6f288ba5cc7f5bfc38ee9c6bf8d2a655228a'
+          test "$(git rev-parse HEAD^{tree})" = '4aa9ab53a4d9a5987bade485ca6c1acf9b02bdf9'
+          test -z "$(find .github/workflows -maxdepth 1 -name 'ghav-*' -print)"
+          sha256sum package.json yarn.lock .prettierignore
+          node --version
+          yarn --version
+          echo 'GHAV_COMMON_PINNED_SOURCE_OK'
