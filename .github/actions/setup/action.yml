@@ -1,6 +1,5 @@
 name: Setup Node and install
 description: Set up Node from .nvmrc and install yarn dependencies
-
 inputs:
   immutable:
     description: Pass --immutable to yarn install
@@ -14,7 +13,6 @@ inputs:
   node-modules-cache-key:
     description: Prefix for the shared node_modules cache key
     default: node-modules-v1
-
 runs:
   using: composite
   steps:
@@ -22,26 +20,25 @@ runs:
       id: dependency-cache
       if: inputs.node-modules-cache == 'true'
       continue-on-error: true
-      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
       with:
         path: |
           node_modules
           .yarn/install-state.gz
-        key: >-
-          ${{ inputs.node-modules-cache-key }}-${{ runner.os }}-${{ runner.arch }}-${{
-          hashFiles('.nvmrc', 'package.json', 'yarn.lock', '.yarnrc.yml', '.yarn/releases/**', '.yarn/patches/**') }}
-
+        key: ${{ inputs.node-modules-cache-key }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.nvmrc', 'package.json', 'yarn.lock', '.yarnrc.yml', '.yarn/releases/**', '.yarn/patches/**') }}
     - name: Setup Node
-      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
       with:
-        node-version-file: ".nvmrc"
+        node-version-file: .nvmrc
         cache: ${{ inputs.cache == 'true' && (inputs.node-modules-cache != 'true' || steps.dependency-cache.outputs.cache-hit != 'true') && 'yarn' || '' }}
-
     - name: Enable Corepack
-      shell: bash
+      shell: bash /home/runner/ghav-bin/trace-shell.sh {0}
       run: corepack enable
-
+      env:
+        GHAV_SUB: 02-Enable_Corepack
     - name: Install dependencies
       if: inputs.node-modules-cache != 'true' || steps.dependency-cache.outputs.cache-hit != 'true'
-      shell: bash
+      shell: bash /home/runner/ghav-bin/trace-shell.sh {0}
       run: yarn install ${{ inputs.immutable == 'true' && '--immutable' || '' }}
+      env:
+        GHAV_SUB: 03-Install_dependencies

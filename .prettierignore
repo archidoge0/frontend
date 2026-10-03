@@ -2,3 +2,8 @@ CLA.md
 CODE_OF_CONDUCT.md
 LICENSE.md
 PULL_REQUEST_TEMPLATE.md
+# ghav harness files
+.github/workflows/ghav-*.yml
+.github/actions/build/action.y*ml
+.github/actions/prepare-dependencies/action.y*ml
+.github/actions/setup/action.y*ml

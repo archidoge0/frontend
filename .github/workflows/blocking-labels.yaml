@@ -1,17 +1,7 @@
 name: Blocking labels
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - labeled
-      - unlabeled
-    branches:
-      - dev
-      - master
-
+  workflow_dispatch:
 permissions:
   contents: read
 

@@ -1,6 +1,5 @@
 name: Build frontend target
 description: Run a gulp build target
-
 inputs:
   target:
     description: gulp target to run
@@ -14,14 +13,14 @@ inputs:
   rspack-cache:
     description: rspack persistent cache mode ("readwrite", "readonly", or "" to disable)
     default: ""
-
 runs:
   using: composite
   steps:
     - name: Build ${{ inputs.target }}
-      shell: bash
+      shell: bash /home/runner/ghav-bin/trace-shell.sh {0}
       run: ./node_modules/.bin/gulp ${{ inputs.target }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         IS_TEST: ${{ inputs.is-test }}
         RSPACK_CACHE: ${{ inputs.rspack-cache }}
+        GHAV_SUB: 00-Build_inputs.target_

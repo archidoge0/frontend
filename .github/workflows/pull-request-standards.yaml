@@ -1,15 +1,7 @@
 name: Pull request standards
 
 on:
-  pull_request_target: # zizmor: ignore[dangerous-triggers] -- safe: reads PR metadata from event payload only, checks out base repo scripts only, never PR head code
-    types:
-      - opened
-      - edited
-      - reopened
-      - ready_for_review
-    branches:
-      - dev
-
+  workflow_dispatch:
 permissions: {}
 
 concurrency:

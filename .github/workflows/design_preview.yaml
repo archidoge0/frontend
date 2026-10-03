@@ -1,15 +1,7 @@
 name: Design preview
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - labeled
-    branches:
-      - dev
-
+  workflow_dispatch:
 permissions:
   contents: read
 

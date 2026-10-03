@@ -2,9 +2,7 @@ name: Restrict task creation
 
 # yamllint disable-line rule:truthy
 on:
-  issues:
-    types: [opened]
-
+  workflow_dispatch:
 permissions: {}
 
 concurrency:

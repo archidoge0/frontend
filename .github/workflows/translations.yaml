@@ -2,13 +2,6 @@ name: Translations
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - dev
-    paths:
-      - .github/workflows/translations.yaml
-      - src/translations/en.json
-
 permissions:
   contents: read
 
